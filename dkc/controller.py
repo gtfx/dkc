@@ -1,6 +1,7 @@
 from dkc.cloudwatch import Cloudwatch
 from dkc.kinesis import Kinesis
 from dkc.logger import get_logger
+from dkc.config import get_logging_option
 import time
 
 class Controller(object):
@@ -9,9 +10,8 @@ class Controller(object):
                  output_per_shard=None,
                  input_hwm='75',
                  output_hwm='75',
-                 check_interval=60,
-                 log_level='DEBUG'):
-        self.logger = get_logger(self, log_level)
+                 check_interval=60):
+        self.logger = get_logger(self, get_logging_option('level'))
         self.kinesis = kinesis
         self.cloudwatch = cloudwatch
         self.input_hwm = input_hwm
@@ -42,9 +42,9 @@ class Controller(object):
         if self.get_input_capacity_percentage() >= self.input_hwm:
             self.logger.debug('Input capacity is at %s\% starting to split shards')
             return True
-
         return False
 
+    @property
     def is_output_hwm(self):
         if self.get_output_capacity_percentage() >= self.output_hwm:
             self.logger.debug('Input capacity is at %s\% starting to split shards')
@@ -71,8 +71,10 @@ class Controller(object):
     def start(self):
         while True:
             if self.critical_state():
+                self.logger.debug('Spliting shard')
                 self.split_biggest_shard()
 
+            self.logger.debug('Sleeping for one minute')
             time.sleep(self.check_interval)
 
 
@@ -85,7 +87,6 @@ def run(stream):
 
 def main():
     import sys
-    import argparse
     stream = 'Events'
 
     sys.exit(run(stream))
