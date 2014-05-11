@@ -3,7 +3,7 @@ import boto.exception
 import boto.ec2.cloudwatch
 import datetime
 
-from config import get_global_option
+from config import get_global_option, get_logging_option
 from dkc.logger import get_logger
 import pytz
 
@@ -11,10 +11,10 @@ import pytz
 class Cloudwatch(object):
     __conn = None
 
-    def __init__(self, stream, namespace='AWS/Kinesis', log_level='DEBUG'):
+    def __init__(self, stream, namespace='AWS/Kinesis'):
         self.dimensions = {'StreamName': stream}
         self.namespace = namespace
-        self.logger = get_logger(self, log_level)
+        self.logger = get_logger(self, get_logging_option('level'))
         self.connect()
 
     def connect(self):
