@@ -1,33 +1,20 @@
 from dkc.cloudwatch import Cloudwatch
 from dkc.kinesis import Kinesis
 from dkc.logger import get_logger
-from dkc.config import get_logging_option
+from dkc.config import get_logging_option, get_kinesis_option, get_global_option
 import time
 
 class Controller(object):
-    def __init__(self, kinesis, cloudwatch,
-                 input_per_shard=None,
-                 output_per_shard=None,
-                 input_hwm='75',
-                 output_hwm='75',
-                 check_interval=60):
+    def __init__(self, kinesis, cloudwatch, input_per_shard=None, output_per_shard=None):
         self.logger = get_logger(self, get_logging_option('level'))
         self.kinesis = kinesis
         self.cloudwatch = cloudwatch
-        self.input_hwm = input_hwm
-        self.output_hwm = output_hwm
-        self.check_interval = check_interval
+        self.input_hwm = get_kinesis_option('input_hwm')
+        self.output_hwm = get_kinesis_option('output_hwm')
+        self.check_interval = get_global_option('check_interval')
+        self.input_per_shard = get_kinesis_option('input_per_shard')
+        self.output_per_shard = get_kinesis_option('output_per_shard')
         self.shards = self.kinesis.get_shards()
-
-        if not input_per_shard:
-            self.input_per_shard = 1024 * 1024
-        else:
-            self.input_per_shard = input_per_shard
-
-        if not output_per_shard:
-            self.output_per_shard = 1024 * 1024 * 2
-        else:
-            self.output_per_shard = output_per_shard
 
     @property
     def total_input_capacity(self):
