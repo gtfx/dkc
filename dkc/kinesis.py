@@ -3,7 +3,7 @@ import boto.exception
 
 from functools import total_ordering
 from dkc.logger import get_logger
-from config import get_global_option
+from config import get_global_option, get_logging_option
 import time
 
 @total_ordering
@@ -39,9 +39,9 @@ class Shard(object):
 class Stream(object):
     __conn = None
 
-    def __init__(self, stream, log_level='DEBUG'):
+    def __init__(self, stream):
         self.name = stream
-        self.logger = get_logger(self, log_level)
+        self.logger = get_logger(self, get_logging_option('level'))
 
         if not self.is_connected():
             self.connect()
@@ -66,7 +66,11 @@ class Stream(object):
         return bool(self.__conn)
 
     def connect(self):
+        self.logger.debug("Connecting to kinesis")
         self.__conn = boto.kinesis.connect_to_region(get_global_option('region'))
+        if not self.is_connected():
+            self.logger.error('Could not connect to Kinesis')
+            raise ConnectionException
 
     def split_shard(self, shard):
         """
@@ -91,9 +95,9 @@ class Stream(object):
 class Kinesis(object):
     __conn = None
 
-    def __init__(self, stream, log_level='DEBUG'):
-        self.stream = Stream(stream)
-        self.logger = get_logger(self, log_level)
+    def __init__(self, stream_name):
+        self.stream = Stream(stream_name)
+        self.logger = get_logger(self, get_logging_option('level'))
 
     def get_biggest_shard(self):
         return max(self.get_shards())
@@ -101,3 +105,21 @@ class Kinesis(object):
     def get_shards(self):
         for s in self.stream:
             yield s
+
+    def get_shards_count(self):
+        return len(self.stream)
+
+
+class ConnectionException(Exception):
+    "Connection to Kinesis failed"
+
+
+
+
+if __name__ == '__main__':
+    stream = 'Events'
+    kinesis = Kinesis(stream)
+
+    kinesis.get_biggest_shard()
+    kinesis.get_shards()
+    kinesis.get_shards_count()
