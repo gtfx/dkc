@@ -3,7 +3,10 @@ from dkc.cloudwatch import Cloudwatch
 from dkc.kinesis import Kinesis
 from dkc.logger import get_logger
 from dkc.config import get_logging_option, get_kinesis_option, get_global_option
+from dkc.daemon import Daemon
 import time
+import sys
+
 
 class Controller(object):
     def __init__(self, kinesis, cloudwatch):
@@ -89,8 +92,18 @@ class Controller(object):
                 self.logger.debug('Merging shards')
                 self.merge_smallest_shard()
 
-            self.logger.debug('Sleeping for one minute')
+            self.logger.debug('Sleeping for {} seconds'.format(self.check_interval))
             time.sleep(self.check_interval)
+
+
+class ControllerDaemon(Daemon):
+    def run(self, *args, **kwargs):
+        logger = get_logger(self, get_logging_option('level'))
+        try:
+            while True:
+                run(*args, **kwargs)
+        except Exception as error:
+            logger.error(error)
 
 
 def run(stream):
@@ -98,17 +111,17 @@ def run(stream):
     kinesis = Kinesis(stream)
     controller = Controller(kinesis, cloudwatch)
 
-    controller.split_biggest_shard()
+    controller.start()
 
 
 def main():
-    import sys
-
     stream = 'Test'
-    run(stream)
 
-    # sys.exit(run(stream))
-
+    if get_global_option('daemon'):
+        daemon = ControllerDaemon('{}/dkc.pid'.format(get_global_option('pid_file_dir')))
+        daemon.start(stream)
+    else:
+        sys.exit(run(stream))
 
 if __name__ == '__main__':
     main()
