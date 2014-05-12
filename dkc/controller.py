@@ -75,7 +75,9 @@ class Controller(object):
         self.kinesis.stream.split_shard(biggest_shard)
 
     def merge_smallest_shard(self):
-        pass
+        shard = self.kinesis.get_smallest_shard()
+        shards = self.kinesis.get_adjacent_shard(shard)
+        self.kinesis.merge_shards(shards)
 
     def start(self):
         while True:
