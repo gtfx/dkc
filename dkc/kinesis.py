@@ -71,6 +71,7 @@ class Stream(object):
         if not self.is_connected():
             self.logger.error('Could not connect to Kinesis')
             raise ConnectionException
+        self.logger.debug("Succesfully conected")
 
     def split_shard(self, shard):
         """
@@ -79,27 +80,25 @@ class Stream(object):
 
             Based on that, we wait until the stream is ready.
         """
-        while True:
-
-            if self.get_status() == 'Active':
-                try:
-                    self.__conn.split_shard(self.name, shard.shard_id, shard.split())
-                except boto.exception.LimitExceededException, e:
-                    self.logger.debug('%s Could not split shard %s' % (e.reason, e.message))
-                break
-            else:
-                time.sleep(60)
+        if self.get_status() == 'Active':
+            try:
+                self.__conn.split_shard(self.name, shard.shard_id, shard.split())
+                self.logger.debug('Splitted shard')
+            except boto.exception.LimitExceededException, e:
+                self.logger.debug('%s Could not split shard %s' % (e.reason, e.message))
+        else:
+            time.sleep(60)
 
     def merge_shards(self, shards):
-        while True:
-            if self.get_status() == 'Active':
-                try:
-                    self.__conn.merge_shards(self.name, **shards)
-                except boto.exception.LimitExceededException, e:
-                    self.logger.debug('%s Could not merge shards %s' % (e.reason, e.message))
-                break
-            else:
-                time.sleep(60)
+        if self.get_status() == 'Active':
+            try:
+                self.__conn.merge_shards(self.name, **shards)
+            except boto.exception.LimitExceededException, e:
+                self.logger.debug('%s Could not merge shards %s' % (e.reason, e.message))
+
+        else:
+            self.logger.debug('Sleeping for 60 seconds. %s' % self.get_status())
+            time.sleep(60)
 
 
 class Kinesis(object):
@@ -138,9 +137,9 @@ class ConnectionException(Exception):
 
 
 if __name__ == '__main__':
-    stream = 'Events'
+    stream = 'Test'
     kinesis = Kinesis(stream)
 
-    kinesis.get_biggest_shard()
-    kinesis.get_shards()
-    kinesis.get_shards_count()
+    print kinesis.get_biggest_shard()
+    print kinesis.get_shards()
+    print kinesis.get_shards_count()
