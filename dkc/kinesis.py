@@ -84,9 +84,19 @@ class Stream(object):
             if self.get_status() == 'Active':
                 try:
                     self.__conn.split_shard(self.name, shard.shard_id, shard.split())
-
                 except boto.exception.LimitExceededException, e:
-                    self.logger.debug('%s Could not get metrics %s' % (e.reason, e.message))
+                    self.logger.debug('%s Could not split shard %s' % (e.reason, e.message))
+                break
+            else:
+                time.sleep(60)
+
+    def merge_shards(self, shards):
+        while True:
+            if self.get_status() == 'Active':
+                try:
+                    self.__conn.merge_shards(self.name, **shards)
+                except boto.exception.LimitExceededException, e:
+                    self.logger.debug('%s Could not merge shards %s' % (e.reason, e.message))
                 break
             else:
                 time.sleep(60)
@@ -101,6 +111,17 @@ class Kinesis(object):
 
     def get_biggest_shard(self):
         return max(self.get_shards())
+
+    def get_smallest_shard(self):
+        return min(self.get_shards())
+
+    def get_adjacent_shard(self, shard):
+        for s in self.stream:
+            if s.starting_hash - 1 == shard.ending_hash:
+                return shard, s
+            if s.ending_hash + 1 == shard.starting_hash:
+                return s, shard
+        return
 
     def get_shards(self):
         for s in self.stream:
