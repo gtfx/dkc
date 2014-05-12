@@ -4,9 +4,10 @@ import os.path
 _CONFIGURATION = {
     'global': {
         'check_interval': 300,
+        'region': 'us-east-1',
     },
     'logging': {
-        'level': 'DEBUG'
+        'level': 'DEBUG',
     },
     'kinesis': {
         'input_hwm': '80',
