@@ -85,7 +85,7 @@ class Stream(object):
                 try:
                     self.__conn.split_shard(self.name, shard.shard_id, shard.split())
 
-                except boto.exception.exeLimitExceededException, e:
+                except boto.exception.LimitExceededException, e:
                     self.logger.debug('%s Could not get metrics %s' % (e.reason, e.message))
                 break
             else:
