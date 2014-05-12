@@ -10,7 +10,8 @@ setup(
     author="Leonid Rashkovsky",
     author_email="rashkovsky@gmail.com",
     url="https://github.com/gtfx/dkc",
-    packages=['dkc'],
+    scripts=["bin/controller"],
+    packages=["dkc"],
     install_requires=[
         'boto==2.27.0',
         'pytz==2014.2'

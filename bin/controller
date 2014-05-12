@@ -77,7 +77,7 @@ class Controller(object):
     def merge_smallest_shard(self):
         shard = self.kinesis.get_smallest_shard()
         shards = self.kinesis.get_adjacent_shard(shard)
-        self.kinesis.merge_shards(shards)
+        self.kinesis.stream.merge_shards(shards)
 
     def start(self):
         while True:
@@ -96,14 +96,20 @@ def run(stream):
     cloudwatch = Cloudwatch(stream)
     kinesis = Kinesis(stream)
     controller = Controller(kinesis, cloudwatch)
-    controller.start()
+
+    print kinesis.get_biggest_shard()
+    print kinesis.get_shards()
+    print kinesis.get_shards_count()
+    controller.split_biggest_shard()
 
 
 def main():
     import sys
-    stream = 'Events'
 
-    sys.exit(run(stream))
+    stream = 'Test'
+    run(stream)
+
+    # sys.exit(run(stream))
 
 
 if __name__ == '__main__':
