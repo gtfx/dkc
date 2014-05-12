@@ -3,12 +3,15 @@ import boto.exception
 
 from functools import total_ordering
 from dkc.logger import get_logger
-from config import get_global_option, get_logging_option
+from dkc.config import get_global_option, get_logging_option
 import time
 
 
 @total_ordering
 class Shard(object):
+    """
+        Amazon Shard represantation
+    """
     def __init__(self, shard):
         self.shard_id = str(shard.get('ShardId'))
         self.starting_hash = long(shard.get('HashKeyRange').get('StartingHashKey'))
@@ -46,6 +49,9 @@ class Shard(object):
 
 
 class Stream(object):
+    """
+        Amazon Stream wrapper API
+    """
     __conn = None
 
     def __init__(self, stream):
@@ -129,6 +135,9 @@ class Stream(object):
 
 
 class Kinesis(object):
+    """
+        Kinesis as a service API
+    """
     __conn = None
 
     def __init__(self, stream_name):
