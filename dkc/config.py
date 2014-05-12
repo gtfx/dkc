@@ -5,6 +5,8 @@ _CONFIGURATION = {
     'global': {
         'check_interval': 300,
         'region': 'us-east-1',
+        'daemon': False,
+        'pid_file_dir': '/tmp'
     },
     'logging': {
         'level': 'DEBUG',
