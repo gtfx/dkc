@@ -5,7 +5,7 @@ from dkc.config import get_logging_option, get_kinesis_option, get_global_option
 import time
 
 class Controller(object):
-    def __init__(self, kinesis, cloudwatch, input_per_shard=None, output_per_shard=None):
+    def __init__(self, kinesis, cloudwatch):
         self.logger = get_logger(self, get_logging_option('level'))
         self.kinesis = kinesis
         self.cloudwatch = cloudwatch
@@ -32,9 +32,23 @@ class Controller(object):
         return False
 
     @property
+    def is_input_lwm(self):
+        if self.get_output_capacity_percentage() <= self.output_lwm:
+            self.logger.debug('Input capacity is at %s\% starting to merge shards')
+            return True
+        return False
+
+    @property
     def is_output_hwm(self):
         if self.get_output_capacity_percentage() >= self.output_hwm:
             self.logger.debug('Input capacity is at %s\% starting to split shards')
+            return True
+        return False
+
+    @property
+    def is_output_lwm(self):
+        if self.get_input_capacity_percentage() <= self.input_lwm:
+            self.logger.debug('Input capacity is at %s\% starting to merge shards')
             return True
         return False
 
@@ -46,8 +60,13 @@ class Controller(object):
         output_bytes = self.cloudwatch.get_output_bytes(180)
         return (output_bytes/self.total_output_capacity) * 100
 
-    def critical_state(self):
+    def should_split(self):
         if self.is_input_hwm or self.is_output_hwm:
+            return True
+        return False
+
+    def should_merge(self):
+        if self.is_input_lwm or self.is_output_lwm:
             return True
         return False
 
@@ -55,11 +74,17 @@ class Controller(object):
         biggest_shard = self.kinesis.get_biggest_shard()
         self.kinesis.stream.split_shard(biggest_shard)
 
+    def merge_smallest_shard(self):
+        pass
+
     def start(self):
         while True:
-            if self.critical_state():
+            if self.should_split():
                 self.logger.debug('Spliting shard')
                 self.split_biggest_shard()
+            elif self.should_merge():
+                self.logger.debug('Merging shards')
+                self.merge_smallest_shard()
 
             self.logger.debug('Sleeping for one minute')
             time.sleep(self.check_interval)
