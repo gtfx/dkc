@@ -6,7 +6,7 @@ from dkc.config import get_logging_option, get_kinesis_option, get_global_option
 from dkc.daemon import Daemon
 import time
 import sys
-
+import argparse
 
 class Controller(object):
     def __init__(self, kinesis, cloudwatch):
@@ -115,13 +115,18 @@ def run(stream):
 
 
 def main():
-    stream = 'Test'
+    parser = argparser.ArgumentParser(description='work with kinesis stream. Split and merge shards')
+    parser.add_argument('-s', '--stream', description='Stream name to work with')
+    parser.parse_args()
 
-    if get_global_option('daemon'):
-        daemon = ControllerDaemon('{}/dkc.pid'.format(get_global_option('pid_file_dir')))
-        daemon.start(stream)
-    else:
-        sys.exit(run(stream))
+    if parser.stream:
+        sys.exit(run(parser.stream))
+
+
+    #if get_global_option('daemon'):
+    #    daemon = ControllerDaemon('{}/dkc.pid'.format(get_global_option('pid_file_dir')))
+    #    daemon.start(stream)
+    #else:
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
