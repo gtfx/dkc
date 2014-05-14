@@ -33,28 +33,28 @@ class Controller(object):
     @property
     def is_input_hwm(self):
         if self.get_input_capacity_percentage() >= self.input_hwm:
-            self.logger.debug('Input capacity is at %s\% starting to split shards')
+            self.logger.debug('Input capacity is at %s\% starting to split shards' % self.get_input_capacity_percentage() )
             return True
         return False
 
     @property
     def is_input_lwm(self):
         if self.get_output_capacity_percentage() <= self.output_lwm:
-            self.logger.debug('Input capacity is at %s\% starting to merge shards')
+            self.logger.debug('Input capacity is at %s\% starting to merge shards' % self.get_input_capacity_percentage())
             return True
         return False
 
     @property
     def is_output_hwm(self):
         if self.get_output_capacity_percentage() >= self.output_hwm:
-            self.logger.debug('Input capacity is at %s\% starting to split shards')
+            self.logger.debug('Input capacity is at %s\% starting to split shards' % self.get_output_capacity_percentage())
             return True
         return False
 
     @property
     def is_output_lwm(self):
         if self.get_input_capacity_percentage() <= self.input_lwm:
-            self.logger.debug('Input capacity is at %s\% starting to merge shards')
+            self.logger.debug('Input capacity is at %s\% starting to merge shards' % self.get_output_capacity_percentage())
             return True
         return False
 
@@ -67,14 +67,10 @@ class Controller(object):
         return (output_bytes/self.total_output_capacity) * 100
 
     def should_split(self):
-        if self.is_input_hwm or self.is_output_hwm:
-            return True
-        return False
+        return self.is_input_hwm or self.is_output_hwm:
 
     def should_merge(self):
-        if self.is_input_lwm or self.is_output_lwm:
-            return True
-        return False
+        return self.is_input_lwm or self.is_output_lwm:
 
     def split_biggest_shard(self):
         biggest_shard = self.kinesis.get_biggest_shard()
