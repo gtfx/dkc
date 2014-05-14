@@ -62,7 +62,7 @@ class Controller(object):
         input_bytes = self.cloudwatch.get_input_bytes(180)
 
         if input_bytes == -1:
-            return False
+            return
 
         return (input_bytes/self.total_input_capacity) * 100
 
@@ -70,7 +70,7 @@ class Controller(object):
         output_bytes = self.cloudwatch.get_output_bytes(180)
 
         if output_bytes == -1:
-            return False
+            return
 
         return (output_bytes/self.total_output_capacity) * 100
 
