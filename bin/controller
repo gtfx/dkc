@@ -32,45 +32,53 @@ class Controller(object):
 
     @property
     def is_input_hwm(self):
-        if self.get_input_capacity_percentage() >= self.input_hwm:
-            self.logger.debug('Input capacity is at %s\% starting to split shards' % self.get_input_capacity_percentage() )
+        if self.get_input_capacity_percentage() and self.get_input_capacity_percentage() >= self.input_hwm:
+            self.logger.debug('Input capacity is at %s%% starting to split shards' % self.get_input_capacity_percentage() )
             return True
         return False
 
     @property
     def is_input_lwm(self):
-        if self.get_output_capacity_percentage() <= self.output_lwm:
-            self.logger.debug('Input capacity is at %s\% starting to merge shards' % self.get_input_capacity_percentage())
+        if self.get_input_capacity_percentage() and self.get_input_capacity_percentage() <= self.output_lwm:
+            self.logger.debug('Input capacity is at %s%% starting to merge shards' % self.get_input_capacity_percentage())
             return True
         return False
 
     @property
     def is_output_hwm(self):
-        if self.get_output_capacity_percentage() >= self.output_hwm:
-            self.logger.debug('Input capacity is at %s\% starting to split shards' % self.get_output_capacity_percentage())
+        if self.get_output_capacity_percentage() and self.get_output_capacity_percentage() >= self.output_hwm:
+            self.logger.debug('Output capacity is at %s%% starting to split shards' % self.get_output_capacity_percentage())
             return True
         return False
 
     @property
     def is_output_lwm(self):
-        if self.get_input_capacity_percentage() <= self.input_lwm:
-            self.logger.debug('Input capacity is at %s\% starting to merge shards' % self.get_output_capacity_percentage())
+        if self.get_output_capacity_percentage() and self.get_output_capacity_percentage() <= self.input_lwm:
+            self.logger.debug('Output capacity is at %s%% starting to merge shards' % self.get_output_capacity_percentage())
             return True
         return False
 
     def get_input_capacity_percentage(self):
         input_bytes = self.cloudwatch.get_input_bytes(180)
+
+        if input_bytes == -1:
+            return False
+
         return (input_bytes/self.total_input_capacity) * 100
 
     def get_output_capacity_percentage(self):
         output_bytes = self.cloudwatch.get_output_bytes(180)
+
+        if output_bytes == -1:
+            return False
+
         return (output_bytes/self.total_output_capacity) * 100
 
     def should_split(self):
-        return self.is_input_hwm or self.is_output_hwm:
+        return self.is_input_hwm or self.is_output_hwm
 
     def should_merge(self):
-        return self.is_input_lwm or self.is_output_lwm:
+        return self.is_input_lwm or self.is_output_lwm
 
     def split_biggest_shard(self):
         biggest_shard = self.kinesis.get_biggest_shard()
@@ -114,11 +122,11 @@ def run(stream):
 
 def main():
     parser = argparse.ArgumentParser(description='work with kinesis stream. Split and merge shards')
-    parser.add_argument('-s', '--stream', description='Stream name to work with')
-    parser.parse_args()
+    parser.add_argument('-s', '--stream', dest='stream', help='Stream name to work with')
+    args = parser.parse_args()
 
-    if parser.stream:
-        sys.exit(run(parser.stream))
+    if args.stream:
+        sys.exit(run(args.stream))
 
 
     #if get_global_option('daemon'):
