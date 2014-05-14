@@ -102,6 +102,32 @@ class Cloudwatch(object):
 
         return metric[0].get(statistics)
 
+    def get_input_transactions(self, period, statistics='SampleCount'):
+        metric_name = 'GetRecords.Success'
+
+        period = self.valid_period(period)
+        start_time, end_time = self.calculate_time(period)
+
+        metric = self.get_metric(period, start_time, end_time, metric_name, statistics)
+
+        if not metric:
+            return -1
+
+        return metric[0].get(statistics)
+
+    def get_output_transactions(self, period, statistics='SampleCount'):
+        metric_name = 'PutRecord.Success'
+
+        period = self.valid_period(period)
+        start_time, end_time = self.calculate_time(period)
+
+        metric = self.get_metric(period, start_time, end_time, metric_name, statistics)
+
+        if not metric:
+            return -1
+
+        return metric[0].get(statistics)
+
 
 class ConnectionException(Exception):
     "Connection to Cloudwatch failed"
