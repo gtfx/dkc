@@ -170,14 +170,3 @@ class Kinesis(object):
 class ConnectionException(Exception):
     "Connection to Kinesis failed"
 
-if __name__ == '__main__':
-    stream = 'Test'
-    kinesis = Kinesis(stream)
-    kinesis.stream.update_shards()
-
-    smallest_shard = kinesis.get_smallest_shard()
-    shards = kinesis.get_adjacent_shard(smallest_shard)
-
-    print kinesis.stream.merge_shards(shards)
-
-    # print kinesis.stream.split_shard(kinesis.get_biggest_shard())
