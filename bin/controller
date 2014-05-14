@@ -15,6 +15,8 @@ class Controller(object):
         self.cloudwatch = cloudwatch
         self.input_hwm = get_kinesis_option('input_hwm')
         self.output_hwm = get_kinesis_option('output_hwm')
+        self.input_lwm = get_kinesis_option('input_lwm')
+        self.output_lwm = get_kinesis_option('output_lwm')
         self.check_interval = get_global_option('check_interval')
         self.input_per_shard = get_kinesis_option('input_per_shard')
         self.output_per_shard = get_kinesis_option('output_per_shard')
@@ -90,7 +92,7 @@ class Controller(object):
                 self.split_biggest_shard()
             elif self.should_merge():
                 self.logger.debug('Merging shards')
-                self.merge_smallest_shard()
+                self.merge_shards()
 
             self.logger.debug('Sleeping for {} seconds'.format(self.check_interval))
             time.sleep(self.check_interval)
@@ -115,7 +117,7 @@ def run(stream):
 
 
 def main():
-    parser = argparser.ArgumentParser(description='work with kinesis stream. Split and merge shards')
+    parser = argparse.ArgumentParser(description='work with kinesis stream. Split and merge shards')
     parser.add_argument('-s', '--stream', description='Stream name to work with')
     parser.parse_args()
 
