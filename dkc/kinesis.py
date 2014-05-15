@@ -62,7 +62,7 @@ class Stream(object):
             self.connect()
 
         self._stream = self.__conn.describe_stream(self.name)
-        self._shards = list(Shard(s) for s in self._stream.get('StreamDescription').get('Shards'))
+        self._shards = self.get_shards()
 
     def __len__(self):
         return len(self._shards)
@@ -127,7 +127,10 @@ class Stream(object):
             if s.shard_id == shard_id:
                 return s
 
-    def update_shards(self):
+    def get_shards(self):
+        return [Shard(s) for s in self._stream.get('StreamDescription').get('Shards')]
+
+    def update_parents(self):
         for s in self:
             if s.parent_shard_id:
                 parent_shard = self.get_shard(s.parent_shard_id)
